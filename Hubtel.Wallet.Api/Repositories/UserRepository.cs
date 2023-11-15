@@ -56,9 +56,13 @@ public class UserRepository : GenericRepository<UserModel>, IUserRepository
         try
         {
             var user = await _dbSet.Include(user => user.OwnedWallets)
-                                .Where(user => user.OwnedWallets.Any(wallet => !wallet.IsDeleted))
                                 .FirstOrDefaultAsync(user => user.PhoneNumber == phoneNumber
                                 && !user.IsDeleted);
+
+            if (user is not null)
+            {
+                user.OwnedWallets = user.OwnedWallets.Where(wallet => !wallet.IsDeleted).ToList();
+            }
 
             return (user, ApiError.None);
         }
