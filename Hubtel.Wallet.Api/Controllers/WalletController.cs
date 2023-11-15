@@ -42,7 +42,7 @@ public class WalletController : ApiBaseController
 
             var (walletResponse, error) = await _sender.Send(createWalletCommand);
 
-            if (error == ApiError.Exception)
+            if (error is ApiError.Exception)
             {
                 _logger.LogError($"Error occurred while trying to create a new wallet");
 
@@ -50,17 +50,17 @@ public class WalletController : ApiBaseController
                     ApiResponseRecord.WithFailure("internal server error", "Failed to create a new wallet"));
             }
 
-            if (error == ApiError.OwnerDoesNotExist)
+            if (error is ApiError.NotFound)
             {
                 return BadRequest(ApiResponseRecord.WithFailure("bad request", "Specified user does not exist"));
             }
 
-            if (error == ApiError.WalletDuplication)
+            if (error is ApiError.Duplication)
             {
                 return BadRequest(ApiResponseRecord.WithFailure("bad request", "Wallet already in use by specified user"));
             }
 
-            if (error == ApiError.WalletMaximumLimit)
+            if (error is ApiError.WalletMaximumLimit)
             {
                 return BadRequest(ApiResponseRecord.WithFailure("bad request", "Specified user can not create more than 5 wallets"));
             }
@@ -91,7 +91,7 @@ public class WalletController : ApiBaseController
         {
             var (walletResponse, error) = await _sender.Send(new GetWalletQuery(walletId));
 
-            if (error == ApiError.Exception)
+            if (error is ApiError.Exception)
             {
                 _logger.LogError($"Error occurred while trying to retrieve wallet with specified id");
 
@@ -99,7 +99,7 @@ public class WalletController : ApiBaseController
                     ApiResponseRecord.WithFailure("internal server error", "Failed to retrieve wallet with specified id"));
             }
 
-            if (error == ApiError.WalletNotFound)
+            if (error is ApiError.NotFound)
             {
                 return NotFound(ApiResponseRecord.WithFailure("not found", "Wallet with specified id was not found"));
             }
@@ -123,7 +123,7 @@ public class WalletController : ApiBaseController
         {
             var (walletResponses, error) = await _sender.Send(new GetWalletsQuery());
 
-            if (error == ApiError.Exception)
+            if (error is ApiError.Exception)
             {
                 _logger.LogError($"Error occurred while trying to retrieve all wallets");
 
@@ -149,7 +149,7 @@ public class WalletController : ApiBaseController
         {
             var (isWalletDeleted, error) = await _sender.Send(new DeleteWalletCommand(walletId));
 
-            if (error == ApiError.Exception)
+            if (error is ApiError.Exception)
             {
                 _logger.LogError($"Error occurred while trying to remove wallet with specified id");
 

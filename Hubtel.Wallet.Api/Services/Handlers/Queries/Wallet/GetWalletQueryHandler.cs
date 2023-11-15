@@ -7,7 +7,7 @@ using MediatR;
 
 namespace Hubtel.Wallet.Api.Services.Handlers.Queries.Wallet;
 
-public class GetWalletQueryHandler : IRequestHandler<GetWalletQuery, (WalletResponse?, ApiError)>
+public sealed class GetWalletQueryHandler : IRequestHandler<GetWalletQuery, (WalletResponse?, ApiError)>
 {
     private readonly IUnitOfWork _unitOfWork;
 
@@ -24,18 +24,18 @@ public class GetWalletQueryHandler : IRequestHandler<GetWalletQuery, (WalletResp
 
     public async Task<(WalletResponse?, ApiError)> Handle(GetWalletQuery request, CancellationToken cancellationToken)
     {
-       try
-       {
+        try
+        {
             var (wallet, error) = await _unitOfWork.Wallets.GetByIdAsync(request.WalletId);
 
             if (error == ApiError.Exception) return (null, error);
 
-            if (wallet is null) return (null, ApiError.WalletNotFound);
+            if (wallet is null) return (null, ApiError.NotFound);
 
             var walletResponse = _mapper.Map<WalletResponse>(wallet);
 
             return (walletResponse, ApiError.None);
-       }
+        }
         catch(ApplicationException ex)
         {
             _logger.LogError($"Error occurred while executing the get-wallet query handler: \n{ex}");

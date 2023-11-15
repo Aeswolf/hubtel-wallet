@@ -7,7 +7,7 @@ using MediatR;
 
 namespace Hubtel.Wallet.Api.Services.Handlers.Queries.User;
 
-public class GetUserQueryHandler : IRequestHandler<GetUserQuery, (UserResponse?, ApiError)>
+public sealed class GetUserQueryHandler : IRequestHandler<GetUserQuery, (UserResponse?, ApiError)>
 {
     private readonly IUnitOfWork _unitOfWork;
 
@@ -30,7 +30,7 @@ public class GetUserQueryHandler : IRequestHandler<GetUserQuery, (UserResponse?,
 
             if (error == ApiError.Exception) return (null, error);
 
-            if (user is null) return (null, ApiError.UserNotFound);
+            if (user is null) return (null, ApiError.NotFound);
 
             var userResponse = _mapper.Map<UserResponse>(user);
 

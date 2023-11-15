@@ -7,72 +7,71 @@ using Hubtel.Wallet.Api.Utilities;
 using MapsterMapper;
 using MediatR;
 
-namespace Hubtel.Wallet.Api.Services.Handlers.Commands.Wallet
+namespace Hubtel.Wallet.Api.Services.Handlers.Commands.Wallet;
+
+public sealed class CreateWalletCommandHandler : IRequestHandler<CreateWalletCommand, (WalletResponse?, ApiError)>
 {
-    public class CreateWalletCommandHandler : IRequestHandler<CreateWalletCommand, (WalletResponse?, ApiError)>
+    private readonly IUnitOfWork _unitOfWork;
+
+    private readonly ILogger<CreateWalletCommandHandler> _logger;
+
+    private readonly IMapper _mapper;
+
+    public CreateWalletCommandHandler(IUnitOfWork unitOfWork, ILogger<CreateWalletCommandHandler> logger, IMapper mapper)
     {
-        private readonly IUnitOfWork _unitOfWork;
+        _unitOfWork = unitOfWork;
+        _logger = logger;
+        _mapper = mapper;
+    }
 
-        private readonly ILogger<CreateWalletCommandHandler> _logger;
-
-        private readonly IMapper _mapper;
-
-        public CreateWalletCommandHandler(IUnitOfWork unitOfWork, ILogger<CreateWalletCommandHandler> logger, IMapper mapper)
+    public async Task<(WalletResponse?, ApiError)> Handle(CreateWalletCommand request, CancellationToken cancellationToken)
+    {
+        try
         {
-            _unitOfWork = unitOfWork;
-            _logger = logger;
-            _mapper = mapper;
+            var (user, error) = await _unitOfWork.Users.GetByPhoneNumberAsync(request.OwnerPhoneNumber);
+
+            if (error == ApiError.Exception) return (null, error);
+
+            if (user == null) return (null, ApiError.NotFound);
+
+            var (existingWallet, existingWalletError) = await _unitOfWork.Wallets.GetByAccountNumberAsync(request.AccountNumber);
+
+            if (existingWalletError == ApiError.Exception) return (null, existingWalletError);
+
+            if (existingWallet is not null) return (null, ApiError.Duplication);
+
+            var (ownerWalletCount, countError) = await _unitOfWork.Wallets.GetOwnerWalletsCountAsync(request.OwnerPhoneNumber);
+
+            if (countError == ApiError.Exception) return (null, countError);
+
+            if (ownerWalletCount == 5) return (null, ApiError.WalletMaximumLimit);
+
+            var wallet = _mapper.Map<WalletModel>(request);
+
+            (wallet, error) = await _unitOfWork.Wallets.CreateAsync(wallet!);
+
+            if (error == ApiError.Exception) return (null, error);
+
+            if (wallet?.AccountType == WalletAccountType.Card)
+            {
+                wallet.AccountNumber = CardNumberShortener.Shorten(wallet.AccountNumber);
+            }
+
+            var (wereChangesSaved, saveException) = await _unitOfWork.CompleteAsync();
+
+            if (saveException == ApiError.Exception) return (null, saveException);
+
+            if (!wereChangesSaved) return (null, ApiError.SavesFailure);
+
+            var walletResponse = _mapper.Map<WalletResponse>(wallet!);
+
+            return (walletResponse, ApiError.None);
         }
-
-        public async Task<(WalletResponse?, ApiError)> Handle(CreateWalletCommand request, CancellationToken cancellationToken)
+        catch (ApplicationException ex)
         {
-            try
-            {
-                var (user, error) = await _unitOfWork.Users.GetByPhoneNumberAsync(request.OwnerPhoneNumber);
+            _logger.LogError($"Error occurred while executing the create-wallet command handler: \n{ex}");
 
-                if (error == ApiError.Exception) return (null, error);
-
-                if (user == null) return (null, ApiError.OwnerDoesNotExist);
-
-                var (existingWallet, thrownError) = await _unitOfWork.Wallets.GetByAccountNumberAsync(request.AccountNumber);
-
-                if (thrownError == ApiError.Exception) return (null, thrownError);
-
-                if (existingWallet is not null) return (null, ApiError.WalletDuplication);
-
-                var (ownerWalletCount, countError) = await _unitOfWork.Wallets.GetOwnerWalletsCountAsync(request.OwnerPhoneNumber);
-
-                if (countError == ApiError.Exception) return (null, countError);
-
-                if (ownerWalletCount == 5) return (null, ApiError.WalletMaximumLimit);
-
-                var wallet = _mapper.Map<WalletModel>(request);
-
-                (wallet, error) = await _unitOfWork.Wallets.CreateAsync(wallet!);
-
-                if (error == ApiError.Exception) return (null, error);
-
-                if (wallet?.AccountType == WalletAccountType.Card)
-                {
-                    wallet.AccountNumber = CardNumberShortener.Shorten(wallet.AccountNumber);
-                }
-
-                var (wasChangesSaved, saveException) = await _unitOfWork.CompleteAsync();
-
-                if (saveException == ApiError.Exception) return (null, saveException);
-
-                if (!wasChangesSaved) return (null, ApiError.SavesFailure);
-
-                var walletResponse = _mapper.Map<WalletResponse>(wallet!);
-
-                return (walletResponse, ApiError.None);
-            }
-            catch (ApplicationException ex)
-            {
-                _logger.LogError($"Error occurred while executing the create-wallet command handler: \n{ex}");
-
-                return (null, ApiError.Exception);
-            }
+            return (null, ApiError.Exception);
         }
     }
 }

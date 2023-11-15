@@ -4,4 +4,4 @@ using MediatR;
 
 namespace Hubtel.Wallet.Api.Services.Requests.Queries.Wallet;
 
-public record GetWalletsQuery() : IRequest<(IReadOnlyCollection<WalletResponse>, ApiError)>;
+public sealed record GetWalletsQuery() : IRequest<(IReadOnlyCollection<WalletResponse>, ApiError)>;

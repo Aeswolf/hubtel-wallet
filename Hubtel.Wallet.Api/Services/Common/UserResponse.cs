@@ -1,6 +1,6 @@
 ﻿namespace Hubtel.Wallet.Api.Services.Common;
 
-public record UserResponse
+public sealed record UserResponse
 {
     public string PhoneNumber { get; set; } = string.Empty;
 

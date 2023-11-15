@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Hubtel.Wallet.Api.Models;
 
-public class WalletModel : BaseModel
+public sealed class WalletModel : BaseModel
 {
     public Guid Id { get; private set; } = Guid.NewGuid();
 

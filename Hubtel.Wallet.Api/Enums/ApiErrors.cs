@@ -3,12 +3,9 @@
 public enum ApiError
 {
     Exception,
-    WalletDuplication,
+    Duplication,
     WalletMaximumLimit,
-    WalletNotFound,
     None,
-    UserNotFound,
-    UserExists,
+    NotFound,
     SavesFailure,
-    OwnerDoesNotExist
 }

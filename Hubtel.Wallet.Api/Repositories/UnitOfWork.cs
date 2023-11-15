@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Hubtel.Wallet.Api.Repositories;
 
-public class UnitOfWork : IUnitOfWork
+public sealed class UnitOfWork : IUnitOfWork
 {
     public IUserRepository Users { get; private set; }
 

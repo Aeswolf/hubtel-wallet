@@ -2,7 +2,7 @@
 
 namespace Hubtel.Wallet.Api.Utilities;
 
-public class ApiRegex
+public sealed class ApiRegex
 {
     public static bool IsAValidMtnNumber(string phoneNumber)
     {

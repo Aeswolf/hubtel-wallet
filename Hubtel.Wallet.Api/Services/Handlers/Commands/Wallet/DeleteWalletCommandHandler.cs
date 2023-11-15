@@ -6,7 +6,7 @@ using MediatR;
 
 namespace Hubtel.Wallet.Api.Services.Handlers.Commands.Wallet;
 
-public class DeleteWalletCommandHandler : IRequestHandler<DeleteWalletCommand, (bool?, ApiError)>
+public sealed class DeleteWalletCommandHandler : IRequestHandler<DeleteWalletCommand, (bool?, ApiError)>
 {
     private readonly IUnitOfWork _unitOfWork;
 
@@ -27,15 +27,15 @@ public class DeleteWalletCommandHandler : IRequestHandler<DeleteWalletCommand, (
         {
             var (isWalletDeleted, error) = await _unitOfWork.Wallets.RemoveAsync(request.WalletId);
 
-            if (error == ApiError.Exception) return (null, error);
+            if (error is ApiError.Exception) return (null, error);
 
             if (!isWalletDeleted) return (isWalletDeleted, ApiError.None);
 
-            var (wasChangesSaved, saveException) = await _unitOfWork.CompleteAsync();
+            var (wereChangesSaved, saveException) = await _unitOfWork.CompleteAsync();
 
-            if (saveException == ApiError.Exception) return (null, saveException);
+            if (saveException is ApiError.Exception) return (null, saveException);
 
-            if (!wasChangesSaved) return (null, ApiError.SavesFailure);
+            if (!wereChangesSaved) return (null, ApiError.SavesFailure);
 
             return (isWalletDeleted, ApiError.None);
         }

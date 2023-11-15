@@ -7,7 +7,7 @@ using MediatR;
 
 namespace Hubtel.Wallet.Api.Services.Handlers.Queries.Wallet;
 
-public class GetWalletsQueryHandler :
+public sealed class GetWalletsQueryHandler :
     IRequestHandler<GetWalletsQuery, (IReadOnlyCollection<WalletResponse>, ApiError)>
 {
     private readonly IUnitOfWork _unitOfWork;

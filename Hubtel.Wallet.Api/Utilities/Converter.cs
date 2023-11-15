@@ -3,7 +3,7 @@ using System.Collections;
 
 namespace Hubtel.Wallet.Api.Utilities;
 
-public class Converter
+public sealed class Converter
 {
     public static WalletAccountType ConvertToAccountType(string accountType)
     {

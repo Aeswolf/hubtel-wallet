@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 
 namespace Hubtel.Wallet.Api.Utilities;
 
-public class Validator
+public sealed class Validator
 {
     public static bool ValidatePhoneNumber(string phoneNumber)
     {

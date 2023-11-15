@@ -45,7 +45,7 @@ public class UserController : ApiBaseController
                     ApiResponseRecord.WithFailure("internal server error", "Failed to create a new user"));
             }
 
-            if (error is ApiError.UserExists)
+            if (error is ApiError.Duplication)
             {
                 return BadRequest(ApiResponseRecord.WithFailure("bad request", "Phone number is already in use"));
             }
@@ -84,7 +84,7 @@ public class UserController : ApiBaseController
                     ApiResponseRecord.WithFailure("internal server error", "Failed to retrieve user by phone number"));
             }
 
-            if (error == ApiError.UserNotFound)
+            if (error is ApiError.NotFound)
             {
                 return BadRequest(ApiResponseRecord.WithFailure("bad request", "User with specified phone number not found"));
             }

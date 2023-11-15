@@ -6,7 +6,7 @@ using System.Data.Common;
 
 namespace Hubtel.Wallet.Api.Repositories;
 
-public class WalletRepository : GenericRepository<WalletModel>, IWalletRepository
+public sealed class WalletRepository : GenericRepository<WalletModel>, IWalletRepository
 {
     public WalletRepository(DbContext dbContext, ILogger logger) : base(dbContext, logger)
     {

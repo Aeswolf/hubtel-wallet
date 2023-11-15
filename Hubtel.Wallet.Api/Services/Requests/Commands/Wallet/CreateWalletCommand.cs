@@ -4,7 +4,7 @@ using MediatR;
 
 namespace Hubtel.Wallet.Api.Services.Requests.Commands.Wallet;
 
-public record CreateWalletCommand(
+public sealed record CreateWalletCommand(
     string OwnerPhoneNumber,
     string WalletName,
     string AccountNumber,

@@ -3,5 +3,4 @@ using MediatR;
 
 namespace Hubtel.Wallet.Api.Services.Requests.Commands.Wallet;
 
-public record DeleteWalletCommand(Guid WalletId) : IRequest<(bool?, ApiError)>;
-
+public sealed record DeleteWalletCommand(Guid WalletId) : IRequest<(bool?, ApiError)>;

@@ -1,6 +1,6 @@
 ﻿namespace Hubtel.Wallet.Api.Services.Common;
 
-public record WalletResponse
+public sealed record WalletResponse
 {
     public Guid WalletId { get; set; }
 
@@ -14,4 +14,3 @@ public record WalletResponse
 
     public string Owner { get; set; } = string.Empty;
 }
-

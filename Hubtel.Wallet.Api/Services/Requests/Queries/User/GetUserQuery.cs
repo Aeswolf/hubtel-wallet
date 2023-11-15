@@ -4,4 +4,4 @@ using MediatR;
 
 namespace Hubtel.Wallet.Api.Services.Requests.Queries.User;
 
-public record GetUserQuery(string PhoneNumber) : IRequest<(UserResponse?, ApiError)>;
+public sealed record GetUserQuery(string PhoneNumber) : IRequest<(UserResponse?, ApiError)>;

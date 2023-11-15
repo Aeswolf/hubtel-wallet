@@ -8,7 +8,7 @@ using MapsterMapper;
 
 namespace Hubtel.Wallet.Api.Services.Handlers.Commands.User;
 
-public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, (UserResponse?, ApiError)>
+public sealed class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, (UserResponse?, ApiError)>
 {
     private readonly IUnitOfWork _unitOfWork;
 
@@ -31,7 +31,7 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, (User
 
             if (error == ApiError.Exception) return (null, error);
 
-            if (user is not null) return (null, ApiError.UserExists);
+            if (user is not null) return (null, ApiError.Duplication);
 
             user = _mapper.Map<UserModel>(request);
 
@@ -39,11 +39,11 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, (User
 
             if (error == ApiError.Exception) return (null, error);
 
-            var (wasChangesSaved, saveException) = await _unitOfWork.CompleteAsync();
+            var (wereChangesSaved, saveException) = await _unitOfWork.CompleteAsync();
 
             if (saveException == ApiError.Exception) return (null, saveException);
 
-            if (!wasChangesSaved) return (null, ApiError.SavesFailure);
+            if (!wereChangesSaved) return (null, ApiError.SavesFailure);
 
             var userResponse = _mapper.Map<UserResponse>(user!);
 
