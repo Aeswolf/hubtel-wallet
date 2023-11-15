@@ -19,6 +19,9 @@ public class UserController : ApiBaseController
 
 
     [HttpPost]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> CreateUserAsync(CreateUserContract request)
     {
         if (!ModelState.IsValid)
@@ -70,6 +73,9 @@ public class UserController : ApiBaseController
     }
 
     [HttpGet("{phoneNumber}", Name = "GetUser")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetUserAsync(string phoneNumber)
     {
         try
@@ -86,7 +92,7 @@ public class UserController : ApiBaseController
 
             if (error is ApiError.NotFound)
             {
-                return BadRequest(ApiResponseRecord.WithFailure("bad request", "User with specified phone number not found"));
+                return NotFound(ApiResponseRecord.WithFailure("bad request", "User with specified phone number not found"));
             }
 
             return Ok(ApiResponseRecord.WithSuccess("ok", userResponse));

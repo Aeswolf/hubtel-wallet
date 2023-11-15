@@ -19,6 +19,10 @@ public class WalletController : ApiBaseController
     }
 
     [HttpPost]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> CreateWalletAsync(CreateWalletContract request)
     {
         if (!ModelState.IsValid)
@@ -52,12 +56,12 @@ public class WalletController : ApiBaseController
 
             if (error is ApiError.NotFound)
             {
-                return BadRequest(ApiResponseRecord.WithFailure("bad request", "Specified user does not exist"));
+                return NotFound(ApiResponseRecord.WithFailure("bad request", "User not found"));
             }
 
             if (error is ApiError.Duplication)
             {
-                return BadRequest(ApiResponseRecord.WithFailure("bad request", "Wallet already in use by specified user"));
+                return BadRequest(ApiResponseRecord.WithFailure("bad request", "Wallet already in use"));
             }
 
             if (error is ApiError.WalletMaximumLimit)
@@ -85,6 +89,9 @@ public class WalletController : ApiBaseController
     }
 
     [HttpGet("{walletId:guid}", Name = "GetWallet")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetWalletAsync(Guid walletId)
     {
         try
@@ -117,6 +124,8 @@ public class WalletController : ApiBaseController
     }
 
     [HttpGet]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetWalletsAsync()
     {
         try
@@ -143,6 +152,8 @@ public class WalletController : ApiBaseController
     }
 
     [HttpDelete("{walletId:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> RemoveWalletAsync(Guid walletId)
     {
         try
