@@ -29,7 +29,7 @@ public sealed class CreateUserCommandHandler : IRequestHandler<CreateUserCommand
         {
             var (user, error) = await _unitOfWork.Users.GetByPhoneNumberAsync(request.PhoneNumber);
 
-            if (error == ApiError.Exception) return (null, error);
+            if (error is ApiError.Exception) return (null, error);
 
             if (user is not null) return (null, ApiError.Duplication);
 
@@ -37,13 +37,11 @@ public sealed class CreateUserCommandHandler : IRequestHandler<CreateUserCommand
 
             (user, error) = await _unitOfWork.Users.CreateAsync(user!);
 
-            if (error == ApiError.Exception) return (null, error);
+            if (error is ApiError.Exception) return (null, error);
 
-            var (wereChangesSaved, saveException) = await _unitOfWork.CompleteAsync();
+            error = await _unitOfWork.SaveToDbAsync();
 
-            if (saveException == ApiError.Exception) return (null, saveException);
-
-            if (!wereChangesSaved) return (null, ApiError.SavesFailure);
+            if (error is not ApiError.None) return (null, error);
 
             var userResponse = _mapper.Map<UserResponse>(user!);
 

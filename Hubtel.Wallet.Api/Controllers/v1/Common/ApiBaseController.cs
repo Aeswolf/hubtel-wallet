@@ -2,7 +2,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Hubtel.Wallet.Api.Controllers.Common;
+namespace Hubtel.Wallet.Api.Controllers.v1.Common;
 
 [ApiController]
 public class ApiBaseController : ControllerBase

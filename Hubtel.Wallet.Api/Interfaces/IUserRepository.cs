@@ -7,10 +7,7 @@ public interface IUserRepository : IGenericRepository<UserModel>
 {
     Task<(UserModel?, ApiError)> GetByPhoneNumberAsync(string phoneNumber);
 
-    Task<(IReadOnlyCollection<UserModel>, ApiError)> GetAllWithWalletsAsync();
-
     Task<(UserModel?, ApiError)> GetWithWalletsAsync(string phoneNumber);
 
-    Task<(bool, ApiError)> RemoveByPhoneNumberAsync(string phoneNumber);
 
  }

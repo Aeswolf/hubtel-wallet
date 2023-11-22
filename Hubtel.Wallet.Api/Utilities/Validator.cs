@@ -17,25 +17,25 @@ public sealed class Validator
                         || ApiRegex.IsAValidMasterCardAccountNumber(accountNumber);
     }
 
-    public static bool ValidateWalletAccountNumber(string accountNumber, string accountType)
+
+    public static bool ValidateAccountNumberWithSchemeAndType(string accountNumber, string scheme, string type)
     {
-        return (accountType == "momo") ? ValidatePhoneNumber(accountNumber)
-                        : ValidateAccountNumber(accountNumber);
+        return (type == "momo") ? ValidatePhoneNumberWithScheme(accountNumber, scheme)
+                : ValidateAccountNumberWithScheme(accountNumber, scheme);
     }
 
-    public static bool ValidateAccountSchemeAndAccountNumberMatch(string accountNumber, string scheme)
-    {
-        IDictionary<string, bool> accountNumberSchemePairs = new Dictionary<string, bool>()
-        {
-            { "visa", ApiRegex.IsAValidVisaAccountNumber(accountNumber) },
-            { "master card", ApiRegex.IsAValidMasterCardAccountNumber(accountNumber) },
-            { "mtn", ApiRegex.IsAValidMtnNumber(accountNumber) },
-            { "vodafone", ApiRegex.IsAValidVodafoneNumber(accountNumber) },
-            {  "airteltigo", ApiRegex.IsAValidAirtelTigoNumber(accountNumber) }
-        };
 
-        return accountNumberSchemePairs[scheme.ToLower()];
+    private static bool ValidatePhoneNumberWithScheme(string phoneNumber, string scheme)
+    {
+        return scheme.ToLower() == "mtn" ? ApiRegex.IsAValidMtnNumber(phoneNumber)
+                : scheme.ToLower() == "vodafone" ? ApiRegex.IsAValidVodafoneNumber(phoneNumber)
+                : ApiRegex.IsAValidAirtelTigoNumber(phoneNumber);
     }
 
+    private static bool ValidateAccountNumberWithScheme(string accountNumber, string scheme)
+    {
+        return scheme.ToLower() == "visa" ? ApiRegex.IsAValidVisaAccountNumber(accountNumber)
+                    : ApiRegex.IsAValidMasterCardAccountNumber(accountNumber);
+    }
 
 }

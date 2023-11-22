@@ -1,6 +1,5 @@
 ﻿using Hubtel.Wallet.Api.Contracts.Requests.User;
 using Hubtel.Wallet.Api.Contracts.Response;
-using Hubtel.Wallet.Api.Controllers.Common;
 using Hubtel.Wallet.Api.Services.Requests.Commands.User;
 using Hubtel.Wallet.Api.Utilities;
 using Hubtel.Wallet.Api.Enums;
@@ -8,10 +7,11 @@ using MapsterMapper;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Hubtel.Wallet.Api.Services.Requests.Queries.User;
+using Hubtel.Wallet.Api.Controllers.v1.Common;
 
-namespace Hubtel.Wallet.Api.Controllers;
+namespace Hubtel.Wallet.Api.Controllers.v1;
 
-[Route("api/users")]
+[Route("api/v1/users")]
 public class UserController : ApiBaseController
 {
     public UserController(ILogger<UserController> logger, ISender sender, IMapper mapper)
@@ -38,8 +38,8 @@ public class UserController : ApiBaseController
         {
             var createUserCommand = _mapper.Map<CreateUserCommand>(request);
 
-            var (userResponse, error) = await _sender.Send(createUserCommand);
 
+            var (userResponse, error) = await _sender.Send(createUserCommand);
             if (error is ApiError.Exception)
             {
                 _logger.LogError($"Error occurred while trying to create a new user");
@@ -53,7 +53,7 @@ public class UserController : ApiBaseController
                 return BadRequest(ApiResponseRecord.WithFailure("bad request", "Phone number is already in use"));
             }
 
-            if (error is ApiError.SavesFailure)
+            if (error is ApiError.SaveFailure)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     ApiResponseRecord.WithFailure("internal server error", "Failed to save new user details"));

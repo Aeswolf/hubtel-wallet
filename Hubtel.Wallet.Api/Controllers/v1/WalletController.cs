@@ -1,6 +1,5 @@
 ﻿using Hubtel.Wallet.Api.Contracts.Requests.Wallet;
 using Hubtel.Wallet.Api.Contracts.Response;
-using Hubtel.Wallet.Api.Controllers.Common;
 using Hubtel.Wallet.Api.Services.Requests.Commands.Wallet;
 using Hubtel.Wallet.Api.Utilities;
 using MapsterMapper;
@@ -8,10 +7,11 @@ using MediatR;
 using Hubtel.Wallet.Api.Enums;
 using Microsoft.AspNetCore.Mvc;
 using Hubtel.Wallet.Api.Services.Requests.Queries.Wallet;
+using Hubtel.Wallet.Api.Controllers.v1.Common;
 
-namespace Hubtel.Wallet.Api.Controllers;
+namespace Hubtel.Wallet.Api.Controllers.v1;
 
-[Route("api/wallets")]
+[Route("api/v1/wallets")]
 public class WalletController : ApiBaseController
 {
     public WalletController(ILogger<ApiBaseController> logger, ISender sender, IMapper mapper) : base(logger, sender, mapper)
@@ -35,9 +35,9 @@ public class WalletController : ApiBaseController
             return BadRequest(ApiResponseRecord.WithFailure("bad request", "Invalid phone number"));
         }
 
-        if (!Validator.ValidateAccountSchemeAndAccountNumberMatch(request.AccountNumber, request.AccountScheme))
+        if (!Validator.ValidateAccountNumberWithSchemeAndType(request.AccountNumber, request.AccountScheme, request.AccountType))
         {
-            return BadRequest(ApiResponseRecord.WithFailure("bad request", "Wallet account number is invalid with regards to the type"));
+            return BadRequest(ApiResponseRecord.WithFailure("bad request", $"Account number { request.AccountNumber } does not conform to scheme or type"));
         }
 
         try
@@ -69,7 +69,12 @@ public class WalletController : ApiBaseController
                 return BadRequest(ApiResponseRecord.WithFailure("bad request", "Specified user can not create more than 5 wallets"));
             }
 
-            if (error is ApiError.SavesFailure)
+            if (error is ApiError.InvalidOwner)
+            {
+                return BadRequest(ApiResponseRecord.WithFailure("bad request", $"Specified user do not own {request.AccountNumber}"));
+            }
+
+            if (error is ApiError.SaveFailure)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     ApiResponseRecord.WithFailure("internal server error", "Failed to save new wallet details"));

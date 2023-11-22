@@ -1,5 +1,6 @@
 ﻿using Hubtel.Wallet.Api.Enums;
 using Hubtel.Wallet.Api.Interfaces;
+using Hubtel.Wallet.Api.Services.Common;
 using Hubtel.Wallet.Api.Services.Requests.Commands.Wallet;
 using MapsterMapper;
 using MediatR;
@@ -31,11 +32,9 @@ public sealed class DeleteWalletCommandHandler : IRequestHandler<DeleteWalletCom
 
             if (!isWalletDeleted) return (isWalletDeleted, ApiError.None);
 
-            var (wereChangesSaved, saveException) = await _unitOfWork.CompleteAsync();
+            error = await _unitOfWork.SaveToDbAsync();
 
-            if (saveException is ApiError.Exception) return (null, saveException);
-
-            if (!wereChangesSaved) return (null, ApiError.SavesFailure);
+            if (error is not ApiError.None) return (null, error);
 
             return (isWalletDeleted, ApiError.None);
         }

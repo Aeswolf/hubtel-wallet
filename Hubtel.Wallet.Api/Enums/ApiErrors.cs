@@ -7,5 +7,6 @@ public enum ApiError
     WalletMaximumLimit,
     None,
     NotFound,
-    SavesFailure,
+    SaveFailure,
+    InvalidOwner
 }

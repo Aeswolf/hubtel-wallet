@@ -28,40 +28,34 @@ public sealed class CreateWalletCommandHandler : IRequestHandler<CreateWalletCom
     {
         try
         {
-            var (user, error) = await _unitOfWork.Users.GetByPhoneNumberAsync(request.OwnerPhoneNumber);
+            var error = await CheckOwnerExistenceAsync(request.OwnerPhoneNumber);
 
-            if (error == ApiError.Exception) return (null, error);
+            if (error is not ApiError.None) return (null, error);
 
-            if (user == null) return (null, ApiError.NotFound);
+            if (request.AccountType is WalletAccountType.Momo)
+            {
+                error = await CheckMomoValidalityAsync(request.AccountNumber, request.OwnerPhoneNumber);
 
-            var (existingWallet, existingWalletError) = await _unitOfWork.Wallets.GetByAccountNumberAsync(request.AccountNumber);
+                if (error is not ApiError.None) return (null, error);
+            }
 
-            if (existingWalletError == ApiError.Exception) return (null, existingWalletError);
+            error = await CheckForWalletDuplication(request.AccountNumber);
 
-            if (existingWallet is not null) return (null, ApiError.Duplication);
+            if (error is not ApiError.None) return (null, error);
 
-            var (ownerWalletCount, countError) = await _unitOfWork.Wallets.GetOwnerWalletsCountAsync(request.OwnerPhoneNumber);
+            error = await CheckUserWalletLimitAsync(request.OwnerPhoneNumber);
 
-            if (countError == ApiError.Exception) return (null, countError);
-
-            if (ownerWalletCount == 5) return (null, ApiError.WalletMaximumLimit);
+            if (error is not ApiError.None) return (null, error);
 
             var wallet = _mapper.Map<WalletModel>(request);
 
-            (wallet, error) = await _unitOfWork.Wallets.CreateAsync(wallet!);
+            (wallet, error) = await CreateWalletAsync(wallet!);
+
+            if (error is not ApiError.None) return (null, error);
+
+            error = await _unitOfWork.SaveToDbAsync();
 
             if (error == ApiError.Exception) return (null, error);
-
-            if (wallet?.AccountType == WalletAccountType.Card)
-            {
-                wallet.AccountNumber = CardNumberShortener.Shorten(wallet.AccountNumber);
-            }
-
-            var (wereChangesSaved, saveException) = await _unitOfWork.CompleteAsync();
-
-            if (saveException == ApiError.Exception) return (null, saveException);
-
-            if (!wereChangesSaved) return (null, ApiError.SavesFailure);
 
             var walletResponse = _mapper.Map<WalletResponse>(wallet!);
 
@@ -73,5 +67,63 @@ public sealed class CreateWalletCommandHandler : IRequestHandler<CreateWalletCom
 
             return (null, ApiError.Exception);
         }
+    }
+
+    private async Task<ApiError> CheckOwnerExistenceAsync(string phoneNumber)
+    {
+        var (user, error) = await _unitOfWork.Users.GetByPhoneNumberAsync(phoneNumber);
+
+        if (error == ApiError.Exception) return error;
+
+        if (user == null) return ApiError.NotFound;
+
+        return ApiError.None;
+    }
+
+    private async Task<ApiError> CheckForWalletDuplication(string accountNumber)
+    {
+        var (wallet, error) = await _unitOfWork.Wallets.GetByAccountNumberAsync(accountNumber);
+
+        if (error is ApiError.Exception) return error;
+
+        if (wallet is not null) return ApiError.Duplication;
+
+        return ApiError.None;
+    }
+
+    private async Task<ApiError> CheckUserWalletLimitAsync(string phoneNumber)
+    {
+        var (walletCount, error) = await _unitOfWork.Wallets.GetOwnerWalletsCountAsync(phoneNumber);
+
+        if (error is ApiError.Exception) return error;
+
+        if (walletCount == 5) return ApiError.WalletMaximumLimit;
+
+        return ApiError.None;
+    }
+
+    private async Task<(WalletModel?, ApiError)> CreateWalletAsync(WalletModel? wallet)
+    {
+        var (createdWallet, error) = await _unitOfWork.Wallets.CreateAsync(wallet!);
+
+        if (error is ApiError.Exception) return (null, error);
+
+        if (createdWallet?.AccountType == WalletAccountType.Card)
+        {
+            createdWallet.AccountNumber = CardNumberShortener.Shorten(wallet!.AccountNumber);
+        }
+
+        return (createdWallet, ApiError.None);
+    }
+
+    private async Task<ApiError> CheckMomoValidalityAsync(string phoneNumber, string ownerPhoneNumber)
+    {
+        var (user, error) = await _unitOfWork.Users.GetByPhoneNumberAsync(phoneNumber);
+
+        if (error is ApiError.Exception) return error;
+
+        if (user is not null && phoneNumber != ownerPhoneNumber) return ApiError.InvalidOwner;
+
+        return ApiError.None;
     }
 }
